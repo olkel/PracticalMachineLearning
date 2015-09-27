@@ -1,0 +1,16 @@
+base
+dplyr
+ggvis
+lattice
+ggplot2
+caret
+RANN
+RGtk2
+rattle
+rpart
+randomForest
+survival
+gbm
+plyr
+MASS
+klaR
