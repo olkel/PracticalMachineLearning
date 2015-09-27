@@ -1,0 +1,129 @@
+---
+title: "Coursera Practical Machine Learning"
+author: "Oliver Kliegel"
+date: "26. September 2015"
+output: html_document
+---
+
+This investigation is going to attempt to make predictions for the Weight Lifting Exercise Dataset. A large training set is used to decide between various algorithms and train the best one, in order to make the prediction attempt for the `classe` varible in the seperate test set.
+Some preliminary code:
+
+```{r, message=FALSE, cache=TRUE}
+library(dplyr)
+library(ggvis)
+library(caret)
+library(RANN)
+pml <- read.csv("pml-training.csv")
+pml.dt <- tbl_df(pml)
+```
+
+##Pre-Processing##
+
+The numeric and the factor variables need different treatments and must therefore be seperated:
+
+```{r, message=FALSE, cache=TRUE}
+nums <- pml.dt %>%  sapply(is.numeric)
+pml.dt.n <- pml.dt[nums]
+pml.dt.f <- pml.dt[!nums]
+```
+
+Factor variables that are mostly empty will be excluded and the remaining factor variables are going to be transfered into dummy variables:
+
+```{r, message=FALSE, cache=TRUE}
+filled <- pml.dt.f %>% sapply(function(x) sum(x!="")) %>% sapply(function(x) x>10000)
+pml.dt.f <- pml.dt.f[filled]
+dummies <- dummyVars(classe ~ user_name + new_window, pml.dt.f)
+pml.f.pr <- data.frame(predict(dummies, newdata = pml.dt.f))
+```
+
+The numeric variables need to be centred and scaled, and missing values need to be imputed. In addition the high number of provided numeric variables will be condensed by means of Principil Components Analysis:
+
+```{r, cache=TRUE, message=FALSE}
+preP <- preProcess(pml.dt.n, method=c("center", "scale", "knnImpute", "pca"))
+pml.n.pr <- predict(preP, pml.dt.n)
+```
+
+Now the numeric and factor variables can be merged back together. Furthermore a little check for variables with near zero variance is conducted:
+
+```{r, cache=TRUE, message=FALSE, results=FALSE}
+pml.clean <- bind_cols(pml.n.pr, pml.f.pr, pml.dt.f[,c(2,4)])
+nearZeroVar(pml.clean, saveMetrics = T)
+```
+
+Next, the training data is going to be split into two parts in order to cross validate the performance of different prediction algorithms:
+
+```{r, cache=TRUE, message=FALSE}
+sample <- createDataPartition(y=pml.clean$classe, p=0.5, list=F)
+pml.sample <- pml.clean[sample,]
+pml.sample2 <- pml.clean[-sample,]
+```
+
+The algorithms are now going to be tested one after the other.
+##Tree based prediction##
+```{r, cache=TRUE, message=FALSE, warning=FALSE}
+library(rattle)
+treeFit <- train(classe~., method="rpart", data=pml.sample)
+treePrediction <- predict(treeFit, pml.sample2)
+```
+
+##Random forest prediction##
+```{r, cache=TRUE, message=FALSE, warning=FALSE}
+forestFit <- train(classe~., method="rf", data=pml.sample, prox=T)
+forestPrediction <- predict(forestFit, pml.sample2)
+```
+
+##Boost fit prediction##
+```{r, cache=TRUE, message=FALSE, warning=FALSE}
+boostFit <- train(classe~., method="gbm", data=pml.sample, verbose=F)
+boostPrediction <- predict(boostFit, pml.sample2)
+```
+
+##Linear Discriminant Analysis##
+```{r, cache=TRUE, message=FALSE, warning=FALSE}
+ldaFit <- train(classe~., method="lda", data=pml.sample)
+ldaPrediction <- predict(ldaFit, pml.sample2)
+```
+
+##Bayes fit prediction##
+```{r, cache=TRUE, message=FALSE, warning=FALSE}
+bayesFit <- train(classe~., method="nb", data=pml.sample)
+bayesPrediction <- predict(bayesFit, pml.sample2)
+```
+
+The performance of all these algorithm can be compared by using the accuracy of each prediction:
+```{r}
+accuracies <- c(tree=confusionMatrix(treePrediction, pml.sample2$classe)$overall[1])
+accuracies <- c(accuracies, forest=confusionMatrix(forestPrediction, pml.sample2$classe)$overall[1])
+accuracies <- c(accuracies, boost = confusionMatrix(boostPrediction, pml.sample2$classe)$overall[1])
+accuracies <- c(accuracies, lda = confusionMatrix(ldaPrediction, pml.sample2$classe)$overall[1])
+accuracies <- c(accuracies, bayes = confusionMatrix(bayesPrediction, pml.sample2$classe)$overall[1])
+stack(accuracies) %>% ggvis(~ind, ~values) %>% layer_bars() %>% hide_legend("fill") %>% add_axis(type="x", title="Method") %>% add_axis(type="y", title="Accuracy")
+```
+##Predictions##
+Preperation and preprocessing of the test file:
+```{r, cache=TRUE}
+testing <- read.csv("pml-testing.csv")
+test <- tbl_df(testing)
+test.n <- test[nums]
+test.f <- test[!nums]
+test.f <- test.f[filled]
+user_name.adelmo <- as.integer(test.f$user_name=="adelmo")
+user_name.carlitos <- as.integer(test.f$user_name=="carlitos")
+user_name.charles <- as.integer(test.f$user_name=="charles")
+user_name.eurico <- as.integer(test.f$user_name=="eurico")
+user_name.jeremy <- as.integer(test.f$user_name=="jeremy")
+user_name.pedro <- as.integer(test.f$user_name=="pedro")
+new_window.no <- as.integer(test.f$new_window=="no")
+new_window.yes <- as.integer(test.f$new_window=="yes")
+test.f.pr <- cbind(user_name.adelmo, user_name.carlitos, user_name.charles, user_name.eurico, user_name.jeremy, user_name.pedro, new_window.no, new_window.yes)
+test.n.pr <- predict(preP, test.n)
+test.clean <- bind_cols(test.n.pr, as.data.frame(test.f.pr), test.f[,c(2,4)])
+```
+
+
+The actual predictions for the 20 datasets in the test file:
+```{r}
+predict(forestFit, test.clean)
+```
+
+
