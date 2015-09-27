@@ -101,60 +101,7 @@ pml.f.pr &lt;- data.frame(predict(dummies, newdata = pml.dt.f))</code></pre>
 pml.n.pr &lt;- predict(preP, pml.dt.n)</code></pre>
 <p>Now the numeric and factor variables can be merged back together. Furthermore a little check for variables with near zero variance is conducted:</p>
 <pre class="r"><code>pml.clean &lt;- bind_cols(pml.n.pr, pml.f.pr, pml.dt.f[,c(2,4)])
-nearZeroVar(pml.clean, saveMetrics = T)</code></pre>
-<pre><code>##                    freqRatio percentUnique zeroVar   nzv
-## PC1                 1.000000  100.00000000   FALSE FALSE
-## PC2                 1.000000   99.90826623   FALSE FALSE
-## PC3                 1.000000   99.94394047   FALSE FALSE
-## PC4                 1.000000   99.92865151   FALSE FALSE
-## PC5                 1.000000   99.91845887   FALSE FALSE
-## PC6                 1.000000   99.93884415   FALSE FALSE
-## PC7                 1.000000  100.00000000   FALSE FALSE
-## PC8                 1.000000   99.93884415   FALSE FALSE
-## PC9                 1.000000   99.90826623   FALSE FALSE
-## PC10                1.000000  100.00000000   FALSE FALSE
-## PC11                1.000000   99.91336255   FALSE FALSE
-## PC12                1.000000   99.92355519   FALSE FALSE
-## PC13                1.500000   99.91336255   FALSE FALSE
-## PC14                1.000000   99.96432576   FALSE FALSE
-## PC15                1.000000   99.92355519   FALSE FALSE
-## PC16                1.000000  100.00000000   FALSE FALSE
-## PC17                1.000000  100.00000000   FALSE FALSE
-## PC18                1.000000   99.92865151   FALSE FALSE
-## PC19                1.000000   99.90826623   FALSE FALSE
-## PC20                1.000000   99.94394047   FALSE FALSE
-## PC21                1.000000   99.91845887   FALSE FALSE
-## PC22                1.000000   99.93884415   FALSE FALSE
-## PC23                1.000000   99.95413312   FALSE FALSE
-## PC24                1.000000   99.94394047   FALSE FALSE
-## PC25                1.000000   99.93884415   FALSE FALSE
-## PC26                1.000000   99.94903680   FALSE FALSE
-## PC27                1.000000   99.95413312   FALSE FALSE
-## PC28                2.000000   99.99490368   FALSE FALSE
-## PC29                1.000000   99.94903680   FALSE FALSE
-## PC30                1.000000   99.97961472   FALSE FALSE
-## PC31                1.000000   99.97451840   FALSE FALSE
-## PC32                1.000000   99.94394047   FALSE FALSE
-## PC33                1.000000   99.94903680   FALSE FALSE
-## PC34                1.000000   99.97451840   FALSE FALSE
-## PC35                1.000000   99.95413312   FALSE FALSE
-## PC36                1.000000   99.95922944   FALSE FALSE
-## PC37                1.000000   99.96432576   FALSE FALSE
-## PC38                1.000000   99.95413312   FALSE FALSE
-## PC39                1.000000   99.94394047   FALSE FALSE
-## PC40                1.000000   99.96942208   FALSE FALSE
-## PC41                1.000000   99.92355519   FALSE FALSE
-## PC42                1.000000   99.95413312   FALSE FALSE
-## user_name.adelmo    4.041624    0.01019264   FALSE FALSE
-## user_name.carlitos  5.305270    0.01019264   FALSE FALSE
-## user_name.charles   4.549208    0.01019264   FALSE FALSE
-## user_name.eurico    5.391531    0.01019264   FALSE FALSE
-## user_name.jeremy    4.767784    0.01019264   FALSE FALSE
-## user_name.pedro     6.518008    0.01019264   FALSE FALSE
-## new_window.no      47.330049    0.01019264   FALSE  TRUE
-## new_window.yes     47.330049    0.01019264   FALSE  TRUE
-## cvtd_timestamp      1.000668    0.10192641   FALSE FALSE
-## classe              1.469581    0.02548160   FALSE FALSE</code></pre>
+#nearZeroVar(pml.clean, saveMetrics = T)</code></pre>
 <p>Next, the training data is going to be split into two parts in order to cross validate the performance of different prediction algorithms:</p>
 <pre class="r"><code>sample &lt;- createDataPartition(y=pml.clean$classe, p=0.5, list=F)
 pml.sample &lt;- pml.clean[sample,]
@@ -339,7 +286,11 @@ var plot_id663174939_spec = {
   "handlers": null
 };
 ggvis.getPlot("plot_id663174939").parseSpec(plot_id663174939_spec);
-</script> ##Predictions## Preperation and preprocessing of the test file:</p>
+</script></p>
+</div>
+<div id="predictions" class="section level2">
+<h2>Predictions</h2>
+<p>Preperation and preprocessing of the test file:</p>
 <pre class="r"><code>testing &lt;- read.csv(&quot;pml-testing.csv&quot;)
 test &lt;- tbl_df(testing)
 test.n &lt;- test[nums]

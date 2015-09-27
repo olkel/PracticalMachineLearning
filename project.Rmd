@@ -47,7 +47,7 @@ Now the numeric and factor variables can be merged back together. Furthermore a 
 
 ```{r, cache=TRUE, message=FALSE, results=FALSE}
 pml.clean <- bind_cols(pml.n.pr, pml.f.pr, pml.dt.f[,c(2,4)])
-nearZeroVar(pml.clean, saveMetrics = T)
+#nearZeroVar(pml.clean, saveMetrics = T)
 ```
 
 Next, the training data is going to be split into two parts in order to cross validate the performance of different prediction algorithms:
@@ -99,6 +99,7 @@ accuracies <- c(accuracies, lda = confusionMatrix(ldaPrediction, pml.sample2$cla
 accuracies <- c(accuracies, bayes = confusionMatrix(bayesPrediction, pml.sample2$classe)$overall[1])
 stack(accuracies) %>% ggvis(~ind, ~values) %>% layer_bars() %>% hide_legend("fill") %>% add_axis(type="x", title="Method") %>% add_axis(type="y", title="Accuracy")
 ```
+
 ##Predictions##
 Preperation and preprocessing of the test file:
 ```{r, cache=TRUE}
